@@ -1084,7 +1084,8 @@ public class VideoActivity extends AppCompatActivity implements IVideoParamsChan
 
     }
 
-    private Uri openDvrFile() {
+/**
+      private Uri openDvrFile() {
         String dvrFolder = getSharedPreferences("general",
                 Context.MODE_PRIVATE).getString("dvr_folder_", "");
         if (dvrFolder.isEmpty()) {
@@ -1107,7 +1108,33 @@ public class VideoActivity extends AppCompatActivity implements IVideoParamsChan
         }
         return null;
     }
+*/
 
+    private Uri openDvrFile() {
+    // 1. 尝试从配置读取路径
+        String dvrFolder = getSharedPreferences("general", Context.MODE_PRIVATE).getString("dvr_folder_", "");
+    
+    // 2. 如果路径为空，我们手动强行注入一个奇遇 MIX 能用的路径
+        if (dvrFolder.isEmpty()) {
+            dvrFolder = getExternalFilesDir(null).getAbsolutePath() + "/Movies";
+            File f = new File(dvrFolder);
+            if (!f.exists()) f.mkdirs();
+        // 存回配置，下次就不用再注入了
+            getSharedPreferences("general", Context.MODE_PRIVATE).edit().putString("dvr_folder_", dvrFolder).apply();
+        }
+
+    // 3. 绕过 DocumentFile.fromTreeUri，直接创建文件
+        File folder = new File(dvrFolder);
+        if (folder.exists() && folder.canWrite()) {
+            String filename = "pixelpilot_" + System.currentTimeMillis() + ".mp4";
+            File recordFile = new File(folder, filename);
+        // 返回文件的 Uri
+            return Uri.fromFile(recordFile);
+        }
+        return null;
+    }
+
+/**
     private void startStopDvr() {
         if (dvrFd == null) {
             Uri dvrUri = openDvrFile();
@@ -1129,7 +1156,22 @@ public class VideoActivity extends AppCompatActivity implements IVideoParamsChan
             stopDvr();
         }
     }
+*/
 
+    private void startStopDvr() {
+        if (dvrFd == null) {
+            Uri dvrUri = openDvrFile();
+            if (dvrUri != null) {
+                startDvr(dvrUri);
+            } else {
+                // 这里原本是调用 Intent 的地方，现在我们只弹窗提示，绝不跳转
+            Toast.makeText(this, "DVR Path Initializing...", Toast.LENGTH_SHORT).show();
+            // 删掉原本所有的 Intent intent = new Intent(...) 代码
+            }
+        } else {
+            stopDvr();
+        }
+    }
     private void startDvr(Uri dvrUri) {
         if (dvrFd != null) {
             stopDvr();
