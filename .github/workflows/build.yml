@@ -36,11 +36,8 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEYSTORE_PATH: ${{ github.workspace }}/pixelpilot.jks
         run: |
-          ./gradlew assembleRelease -Pandroid.injected.signing.store.file=$KEYSTORE_PATH \
-          -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-          -Pandroid.injected.signing.key.alias=pixelpilot \
-          -Pandroid.injected.signing.key.password=$KEYSTORE_PASSWORD
-          mv app/build/outputs/apk/release/app-release.apk PixelPilot.apk
+          ./gradlew assembleDebug
+          mv app/build/outputs/apk/debug/app-debug.apk PixelPilot_Custom.apk
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
